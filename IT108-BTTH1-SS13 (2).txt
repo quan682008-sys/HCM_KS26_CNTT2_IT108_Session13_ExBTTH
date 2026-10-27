@@ -1,0 +1,61 @@
+﻿HƯỚNG DẪN BÀI THỰC HÀNH SMARTFARM MONITOR SYSTEM
+Chức năng 1: Tạo cấu trúc thư mục & file cấu hình bằng PowerShell
+1. Dùng 01 dòng lệnh duy nhất trong PowerShell để tạo thư mục gốc smartfarm-system cùng 4 thư mục con: docs, scripts, data, backup:
+New-Item -ItemType Directory -Path "smartfarm-system/docs", "smartfarm-system/scripts", "smartfarm-system/data", "smartfarm-system/backup" -Force
+2. Tạo file cấu hình .env nằm trong thư mục gốc với nội dung chuẩn:
+@"
+FARM_NAME=SmartFarm_Dalat
+LOG_PATH=./data/log-he-thong.log
+REPORT_PATH=./data/bao-cao-su-co.txt
+"@ | Out-File -FilePath "smartfarm-system/.env" -Encoding utf8
+Chức năng 2: Viết kịch bản tự động hóa auto_report.ps1
+Tạo file auto_report.ps1 trong thư mục scripts/ với nội dung xử lý log hệ thống:
+# Auto Report Script for SmartFarm System
+# Chạy từ thư mục scripts: .\auto_report.ps1
+# Hoặc nếu bị chặn ExecutionPolicy: powershell -ExecutionPolicy Bypass -File .\auto_report.ps1
+
+
+# Lọc các dòng chứa CRITICAL hoặc ERROR từ log-he-thong.log và ghi vào bao-cao-su-co.txt
+Get-Content -Path "../data/log-he-thong.log" | Select-String -Pattern "CRITICAL|ERROR" | Out-File -FilePath "../data/bao-cao-su-co.txt" -Append -Encoding utf8
+Chức năng 3: Xuất dữ liệu & Xử lý Excel
+1. Làm sạch dữ liệu khoảng trắng thừa bằng hàm TRIM:
+Tại ô B2 của sheet cần làm sạch (ví dụ: cột Họ tên hoặc Mã thiết bị bị dính khoảng trắng), nhập công thức:
+=TRIM(A2)
+2. Tra cứu dữ liệu bằng hàm VLOOKUP:
+Để tra cứu thông tin thiết bị/cảm biến từ danh mục theo Mã thiết bị (ví dụ: tra tên thiết bị ở cột 2 từ bảng danh mục ở Sheet 'DanhMuc' vùng $A$2:$C$100):
+=VLOOKUP(A2, DanhMuc!$A$2:$C$100, 2, FALSE)
+Chức năng 4: Tài liệu hóa dự án (README.md)
+Nội dung file docs/README.md:
+# SMARTFARM MONITOR SYSTEM
+
+
+## 1. Mô hình IPO (Input - Process - Output)
+- **Input (Đầu vào):**
+  - Dữ liệu thô từ các cảm biến (Nhiệt độ, Độ ẩm, pH, Ánh sáng).
+  - File nhật ký hoạt động hệ thống (`log-he-thong.log`).
+  - Cấu hình môi trường (`.env`).
+- **Process (Xử lý):**
+  - PowerShell script (`auto_report.ps1`) đọc, lọc sự cố (`CRITICAL`, `ERROR`).
+  - Excel trích xuất, làm sạch (`TRIM`), tra cứu thông tin (`VLOOKUP`) và tính toán chỉ số.
+- **Output (Đầu ra):**
+  - Báo cáo sự cố tự động (`bao-cao-su-co.txt`).
+  - Bảng tổng hợp dữ liệu sạch và biểu đồ giám sát trên Excel.
+
+
+## 2. Phân loại theo mô hình DIKW
+- **Data (Dữ liệu):** Chuỗi ký tự thô từ cảm biến/log, ví dụ: `2026-10-27 14:00:00, SENSOR_01, 38.5C, ERROR`.
+- **Information (Thông tin):** Log được lọc ra sự cố: "Cảm biến SENSOR_01 bị lỗi nhiệt độ cao 38.5°C lúc 14:00".
+- **Knowledge (Tri thức):** Hiểu được rằng nhiệt độ vượt 35°C kéo dài sẽ gây héo cây và hệ thống làm mát chưa kích hoạt kịp thời.
+- **Wisdom (Trí tuệ):** Tự động hóa quy trình bật phun sương cảnh báo sớm khi nhiệt độ tăng nhanh quá 2°C/10 phút.
+
+
+## 3. Bài toán tính thời gian tải Log phần cứng
+- **Thông số bài toán:**
+  - Dung lượng file log: `100 MB` = `100 * 1024 * 1024 * 8 bits` = `838,860,800 bits`.
+  - Tốc độ truyền (Baud rate / Bandwidth): `115,200 bps` (bits per second).
+- **Công thức tính:**
+  $$\text{Thời gian (giây)} = \frac{\text{Dung lượng (bits)}}{\text{Tốc độ (bps)}}$$
+- **Tính toán chi tiết:**
+  $$\text{Thời gian} = \frac{838,860,800}{115,200} \approx 7281.78 \text{ giây}$$
+  $$\approx 121.36 \text{ phút} \approx 2.02 \text{ giờ}$$
+
