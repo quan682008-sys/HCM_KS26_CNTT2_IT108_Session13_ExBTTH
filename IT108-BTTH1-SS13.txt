@@ -1,0 +1,11 @@
+﻿Chuc nang 1
+Dùng 01 dòng lệnh duy nhất trong PowerShell để tạo thư mục gốc smartfarm-system cùng 4 thư mục con: docs, scripts, data, backup (đúng như hình).
+-mkdir smartfarm-system/docs | smartfarm-system/data | smartfarm-system| backup |smartfarm-system scripts
+chuc nang 2:
+Tạo file auto_report.ps1 trong scripts/, chạy từ thư mục này (.\auto_report.ps1) và dùng đường dẫn tương đối. Nếu bị chặn bởi ExecutionPolicy, chạy bằng powershell -ExecutionPolicy Bypass -File .\auto_report.ps1.
+
+
+- PS D:\smartfarm-system\scripts> ni auto_report.ps1
+* Dùng Pipeline (|) kết hợp Get-Content và Select-String lọc các dòng chứa “CRITICAL” hoặc “ERROR” từ log-he-thong.log, chèn nối bằng toán tử >> vào bao-cao-su-co.txt.
+ -PS D:\smartfarm-system\backup> Get-Content *.log-he-thong.log | Select-String "CRITICAL|ERROR"
+-
